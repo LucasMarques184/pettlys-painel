@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pettlys — Painel Operacional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ── RESET & BASE ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #0f0f11;
+    --bg2:      #16161a;
+    --bg3:      #1e1e24;
+    --bg4:      #26262e;
+    --border:   rgba(255,255,255,0.07);
+    --border2:  rgba(255,255,255,0.13);
+    --text:     #e8e6e0;
+    --text2:    #9e9c96;
+    --text3:    #5c5a56;
+    --green:    #4ade80;
+    --green-bg: rgba(74,222,128,0.08);
+    --green-b:  rgba(74,222,128,0.2);
+    --amber:    #fbbf24;
+    --amber-bg: rgba(251,191,36,0.08);
+    --amber-b:  rgba(251,191,36,0.2);
+    --coral:    #fb7185;
+    --coral-bg: rgba(251,113,133,0.08);
+    --serif:    'DM Serif Display', Georgia, serif;
+    --sans:     'DM Sans', sans-serif;
+    --mono:     'DM Mono', monospace;
+    --radius:   12px;
+    --radius-sm:8px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── GRAIN OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: .4;
+  }
+
+  /* ── LAYOUT ── */
+  .app { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 0 20px 60px; }
+
+  /* ── HEADER ── */
+  .header {
+    padding: 40px 0 32px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+  }
+
+  .header-left {}
+
+  .logo {
+    font-family: var(--serif);
+    font-size: 32px;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .logo-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 12px var(--green);
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+
+  .header-sub {
+    font-size: 13px;
+    color: var(--text3);
+    font-weight: 300;
+    letter-spacing: 0.02em;
+  }
+
+  .sync-pill {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 13px;
+    border-radius: 30px;
+    border: 1px solid var(--border2);
+    background: var(--bg2);
+    font-size: 12px;
+    color: var(--text2);
+    font-family: var(--mono);
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: border-color .3s;
+  }
+
+  .sync-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text3);
+    transition: background .3s, box-shadow .3s;
+  }
+
+  .sync-dot.ok { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .sync-dot.syncing { background: var(--amber); animation: pulse .8s infinite; }
+  .sync-dot.err { background: var(--coral); }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  /* ── PROGRESS OVERVIEW ── */
+  .overview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .ov-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    transition: border-color .2s;
+  }
+
+  .ov-card:hover { border-color: var(--border2); }
+
+  .ov-num {
+    font-family: var(--serif);
+    font-size: 28px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .ov-num.green { color: var(--green); }
+  .ov-num.amber { color: var(--amber); }
+  .ov-num.coral { color: var(--coral); }
+
+  .ov-label { font-size: 11px; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; }
+
+  /* ── SEMANAS ── */
+  .semanas { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+
+  .semana {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color .2s;
+  }
+
+  .semana:hover { border-color: var(--border2); }
+  .semana.ativa { border-color: rgba(74,222,128,0.15); }
+
+  .sem-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    cursor: pointer;
+    user-select: none;
+    gap: 12px;
+  }
+
+  .sem-esq { display: flex; align-items: center; gap: 10px; }
+
+  .sem-icon {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .sem-icon.green { background: var(--green-bg); border: 1px solid var(--green-b); }
+  .sem-icon.amber { background: var(--amber-bg); border: 1px solid var(--amber-b); }
+  .sem-icon.muted { background: var(--bg3); border: 1px solid var(--border); }
+
+  .sem-titulo { font-size: 14px; font-weight: 500; }
+
+  .sem-dir { display: flex; align-items: center; gap: 10px; }
+
+  .badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .badge-ativa { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-b); }
+  .badge-prox  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-b); }
+  .badge-fut   { background: var(--bg3); color: var(--text3); border: 1px solid var(--border); }
+
+  .chev {
+    color: var(--text3);
+    font-size: 12px;
+    transition: transform .25s;
+  }
+
+  .chev.open { transform: rotate(180deg); }
+
+  .prog-wrap { padding: 0 18px 10px; display: flex; align-items: center; gap: 10px; }
+
+  .prog-bar {
+    flex: 1; height: 2px;
+    background: var(--bg4);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .prog-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: 2px;
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+    box-shadow: 0 0 8px rgba(74,222,128,.4);
+  }
+
+  .prog-txt { font-size: 11px; color: var(--text3); font-family: var(--mono); min-width: 28px; text-align: right; }
+
+  .tarefas-wrap {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .35s cubic-bezier(.4,0,.2,1);
+  }
+
+  .tarefas-wrap.open { max-height: 800px; }
+
+  .tarefas-inner { padding: 4px 10px 12px; }
+
+  .sep { height: 1px; background: var(--border); margin: 0 8px 10px; }
+
+  .tarefa {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 8px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background .15s;
+  }
+
+  .tarefa:hover { background: var(--bg3); }
+
+  .ck {
+    width: 18px; height: 18px;
+    border-radius: 5px;
+    border: 1.5px solid var(--border2);
+    flex-shrink: 0;
+    margin-top: 2px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .2s;
+    font-size: 11px;
+    color: transparent;
+  }
+
+  .ck.done {
+    background: var(--green-bg);
+    border-color: var(--green-b);
+    color: var(--green);
+  }
+
+  .t-titulo {
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.4;
+    transition: opacity .2s;
+    color: var(--text);
+  }
+
+  .t-titulo.done { text-decoration: line-through; opacity: .35; }
+
+  .t-desc {
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 2px;
+    line-height: 1.5;
+    font-weight: 300;
+  }
+
+  /* ── DIÁRIO ── */
+  .diario {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  .diario-header {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .diario-header h3 {
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 400;
+    color: var(--text);
+  }
+
+  .diario-header p { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+  .diario-body { padding: 16px 18px; }
+
+  .ctx-area {
+    width: 100%;
+    min-height: 100px;
+    font-size: 13px;
+    font-family: var(--sans);
+    font-weight: 300;
+    color: var(--text);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    resize: vertical;
+    line-height: 1.7;
+    transition: border-color .2s;
+    outline: none;
+  }
+
+  .ctx-area:focus { border-color: var(--border2); }
+  .ctx-area::placeholder { color: var(--text3); }
+
+  .ctx-hint { font-size: 11px; color: var(--text3); margin-top: 8px; line-height: 1.6; }
+
+  .btns { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+  .btn {
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: var(--sans);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--bg3);
+    color: var(--text2);
+    cursor: pointer;
+    transition: all .2s;
+    letter-spacing: 0.01em;
+  }
+
+  .btn:hover { background: var(--bg4); color: var(--text); border-color: var(--border2); }
+
+  .btn-green {
+    background: var(--green-bg);
+    color: var(--green);
+    border-color: var(--green-b);
+  }
+
+  .btn-green:hover { background: rgba(74,222,128,0.15); }
+
+  /* ── HISTÓRICO ── */
+  .historico { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; }
+
+  .hist-item {
+    padding: 10px 12px;
+    background: var(--bg3);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    animation: fadeIn .3s ease;
+  }
+
+  @keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:none} }
+
+  .hist-meta {
+    font-size: 10px;
+    color: var(--text3);
+    font-family: var(--mono);
+    margin-bottom: 4px;
+  }
+
+  .hist-texto { font-size: 12px; color: var(--text2); line-height: 1.5; font-weight: 300; }
+
+  /* ── CONTEXTO IA ── */
+  .ctx-output {
+    display: none;
+    margin-top: 12px;
+    padding: 14px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-family: var(--mono);
+    color: var(--text2);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .ctx-output.show { display: block; animation: fadeIn .3s ease; }
+
+  /* ── FIREBASE CONFIG ── */
+  .config-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+
+  .config-box h3 {
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 400;
+    margin-bottom: 6px;
+  }
+
+  .config-box p { font-size: 12px; color: var(--text3); margin-bottom: 16px; line-height: 1.6; }
+
+  .config-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+
+  .field.full { grid-column: 1 / -1; }
+
+  .field label { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+
+  .field input {
+    padding: 8px 10px;
+    font-size: 12px;
+    font-family: var(--mono);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    outline: none;
+    transition: border-color .2s;
+  }
+
+  .field input:focus { border-color: var(--border2); }
+  .field input::placeholder { color: var(--text3); }
+
+  .config-actions { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
+
+  .config-status { font-size: 12px; font-family: var(--mono); }
+  .config-status.ok { color: var(--green); }
+  .config-status.err { color: var(--coral); }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--bg4);
+    border: 1px solid var(--border2);
+    border-radius: 30px;
+    padding: 10px 20px;
+    font-size: 13px;
+    color: var(--text);
+    z-index: 100;
+    transition: transform .3s cubic-bezier(.4,0,.2,1);
+    white-space: nowrap;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── FOOTER ── */
+  .footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .footer-brand { font-family: var(--serif); font-size: 14px; color: var(--text3); }
+  .footer-info { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+
+  /* ── LOADING ── */
+  .loading {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    z-index: 200;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 16px;
+    transition: opacity .5s;
+  }
+
+  .loading.hide { opacity: 0; pointer-events: none; }
+
+  .loading-logo { font-family: var(--serif); font-size: 28px; color: var(--text); }
+
+  .loading-bar {
+    width: 120px; height: 2px;
+    background: var(--bg3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .loading-fill {
+    height: 100%;
+    background: var(--green);
+    width: 0%;
+    border-radius: 2px;
+    box-shadow: 0 0 8px rgba(74,222,128,.5);
+    transition: width .4s ease;
+  }
+
+  .loading-txt { font-size: 12px; color: var(--text3); font-family: var(--mono); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 500px) {
+    .overview { grid-template-columns: repeat(3, 1fr); }
+    .ov-num { font-size: 22px; }
+    .config-fields { grid-template-columns: 1fr; }
+    .header { flex-direction: column; gap: 12px; }
+    .logo { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading" id="loading">
+  <div class="loading-logo">Pettlys</div>
+  <div class="loading-bar"><div class="loading-fill" id="ld-fill"></div></div>
+  <div class="loading-txt" id="ld-txt">conectando...</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">
+        <div class="logo-dot"></div>
+        Pettlys
+      </div>
+      <div class="header-sub">painel operacional — pets uk</div>
+    </div>
+    <div class="sync-pill" id="sync-pill">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-txt">conectando</span>
+    </div>
+  </header>
+
+  <!-- FIREBASE CONFIG (mostrado só se não configurado) -->
+  <div class="config-box" id="config-box" style="display:none">
+    <h3>Configurar Firebase</h3>
+    <p>
+      Para sincronização em tempo real, configure seu Firebase Realtime Database.<br>
+      <strong style="color:var(--text2)">Como fazer:</strong> acesse <code style="font-family:var(--mono);font-size:11px;color:var(--amber)">console.firebase.google.com</code> → crie um projeto → Realtime Database → copie as credenciais abaixo.
+    </p>
+    <div class="config-fields">
+      <div class="field full">
+        <label>databaseURL</label>
+        <input type="text" id="cfg-url" placeholder="https://seu-projeto-default-rtdb.firebaseio.com">
+      </div>
+      <div class="field full">
+        <label>apiKey</label>
+        <input type="text" id="cfg-key" placeholder="AIzaSy...">
+      </div>
+      <div class="field">
+        <label>projectId</label>
+        <input type="text" id="cfg-pid" placeholder="seu-projeto">
+      </div>
+      <div class="field">
+        <label>appId</label>
+        <input type="text" id="cfg-aid" placeholder="1:123456789:web:abc...">
+      </div>
+    </div>
+    <div class="config-actions">
+      <button class="btn btn-green" onclick="salvarConfig()">Conectar</button>
+      <button class="btn" onclick="usarLocalStorage()">Usar sem Firebase</button>
+      <span class="config-status" id="cfg-status"></span>
+    </div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="overview" id="overview"></div>
+
+  <!-- SEMANAS -->
+  <div class="semanas" id="semanas"></div>
+
+  <!-- DIÁRIO DE BORDO -->
+  <div class="diario">
+    <div class="diario-header">
+      <div>
+        <h3>Diário de bordo</h3>
+        <p>Registre decisões, bloqueios e aprendizados da equipe</p>
+      </div>
+    </div>
+    <div class="diario-body">
+      <textarea class="ctx-area" id="ctx"
+        placeholder="Ex: Checkout testado e funcionando. Produto Y com prazo de entrega confirmado 7 dias UK. Vídeo do TikTok com cama redonda teve 3x mais saves..."></textarea>
+      <div class="ctx-hint">
+        Salvo automaticamente. Use o botão abaixo para gerar o contexto completo para colar na IA.
+      </div>
+      <div class="btns">
+        <button class="btn btn-green" onclick="gerarContexto()">Gerar contexto para IA</button>
+        <button class="btn" onclick="registrarNota()">Salvar nota no histórico</button>
+      </div>
+      <div class="ctx-output" id="ctx-output"></div>
+      <div class="historico" id="historico"></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-brand">Pettlys &mdash; pets uk</div>
+    <div class="footer-info" id="last-update">—</div>
+  </div>
+
+</div>
+
+<!-- FIREBASE SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, update }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+/* ══════════════════════════════════════════
+   DADOS DAS SEMANAS
+══════════════════════════════════════════ */
+const SEMANAS = [
+  {
+    id: "s1",
+    label: "Semana 1 — loja no ar",
+    icon: "🛍",
+    badge: "ativa",
+    tarefas: [
+      { id:"t1", t:"Finalizar tema da Shopify", d:"Estado funcional, não perfeito. Prioridade máxima desta semana." },
+      { id:"t2", t:"Selecionar 10 a 15 produtos", d:"AliExpress Choice, prazo UK verificado, avaliações acima de 4.5" },
+      { id:"t3", t:"Escrever descrições em inglês britânico", d:"Não usar tradução literal. Peça ajuda à IA com cada produto." },
+      { id:"t4", t:"Configurar política de entrega honesta", d:"Prazo real para UK. Não prometa o que não pode cumprir." },
+      { id:"t5", t:"Testar checkout com compra real", d:"Stripe + Shopify. Valor mínimo. Confirmar recebimento." },
+      { id:"t6", t:"Verificar pixel Meta e Google Tag", d:"Configurar antes de qualquer tráfego pago." },
+    ]
+  },
+  {
+    id: "s2",
+    label: "Semana 2 — primeiro conteúdo",
+    icon: "🎬",
+    badge: "prox",
+    tarefas: [
+      { id:"t1", t:"Criar perfil TikTok da Pettlys", d:"Bio em inglês, foto de perfil, link da loja." },
+      { id:"t2", t:"Testar Higgsfield com produto real", d:"Criar 2 vídeos de teste antes de assinar plano pago." },
+      { id:"t3", t:"Postar primeiros 3 vídeos no TikTok", d:"Produto em uso, apelo emocional, sem forçar venda." },
+      { id:"t4", t:"Criar perfil Instagram da Pettlys", d:"Mesma identidade visual do TikTok." },
+      { id:"t5", t:"Mapear 5 concorrentes no UK", d:"TikTok e Instagram. Anotar o que fazem bem." },
+    ]
+  },
+  {
+    id: "s3",
+    label: "Semanas 3 e 4 — validação orgânica",
+    icon: "📈",
+    badge: "fut",
+    tarefas: [
+      { id:"t1", t:"Manter ritmo de 1 vídeo por dia", d:"Consistência é mais importante que qualidade perfeita." },
+      { id:"t2", t:"Analisar métricas dos primeiros vídeos", d:"Visualizações, saves, cliques no link. O que performou?" },
+      { id:"t3", t:"Ajustar produtos com base no interesse", d:"O que gerou mais interesse nos vídeos? Priorize." },
+      { id:"t4", t:"Decidir canal de anúncio pago", d:"Com dado orgânico em mãos: Meta ou Google?" },
+      { id:"t5", t:"Definir orçamento inicial para anúncio", d:"Valor que não vai travar a operação se perder." },
+    ]
+  }
+];
+
+/* ══════════════════════════════════════════
+   ESTADO GLOBAL
+══════════════════════════════════════════ */
+let db = null;
+let dbRef = null;
+let useLocal = false;
+let abertos = { s1: true };
+let estados = {};
+let notas = [];
+let ctxTexto = "";
+let ctxTimer = null;
+
+/* ══════════════════════════════════════════
+   LOADING
+══════════════════════════════════════════ */
+function setLoad(pct, txt) {
+  document.getElementById("ld-fill").style.width = pct + "%";
+  document.getElementById("ld-txt").textContent = txt;
+}
+
+function hideLoad() {
+  const l = document.getElementById("loading");
+  l.classList.add("hide");
+  setTimeout(() => l.style.display = "none", 600);
+}
+
+/* ══════════════════════════════════════════
+   SYNC STATUS
+══════════════════════════════════════════ */
+function setSync(state, txt) {
+  const dot = document.getElementById("sync-dot");
+  const label = document.getElementById("sync-txt");
+  dot.className = "sync-dot " + state;
+  label.textContent = txt;
+}
+
+/* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 2400);
+}
+
+/* ══════════════════════════════════════════
+   CONFIG FIREBASE
+══════════════════════════════════════════ */
+function salvarConfig() {
+  const url = document.getElementById("cfg-url").value.trim();
+  const key = document.getElementById("cfg-key").value.trim();
+  const pid = document.getElementById("cfg-pid").value.trim();
+  const aid = document.getElementById("cfg-aid").value.trim();
+  if (!url || !key || !pid) {
+    document.getElementById("cfg-status").textContent = "preencha os campos obrigatórios";
+    document.getElementById("cfg-status").className = "config-status err";
+    return;
+  }
+  const cfg = { databaseURL: url, apiKey: key, projectId: pid, appId: aid || "1:0:web:0" };
+  localStorage.setItem("pettlys_firebase_cfg", JSON.stringify(cfg));
+  document.getElementById("cfg-status").textContent = "conectando...";
+  document.getElementById("cfg-status").className = "config-status";
+  iniciarFirebase(cfg);
+}
+
+window.salvarConfig = salvarConfig;
+
+function usarLocalStorage() {
+  useLocal = true;
+  localStorage.setItem("pettlys_use_local", "1");
+  document.getElementById("config-box").style.display = "none";
+  carregarLocal();
+  hideLoad();
+}
+window.usarLocalStorage = usarLocalStorage;
+
+/* ══════════════════════════════════════════
+   FIREBASE INIT
+══════════════════════════════════════════ */
+function iniciarFirebase(cfg) {
+  try {
+    const app = initializeApp(cfg);
+    db = getDatabase(app);
+    dbRef = ref(db, "pettlys");
+    document.getElementById("config-box").style.display = "none";
+    escutarFirebase();
+  } catch(e) {
+    document.getElementById("cfg-status").textContent = "erro: " + e.message;
+    document.getElementById("cfg-status").className = "config-status err";
+  }
+}
+
+function escutarFirebase() {
+  setSync("syncing", "conectando...");
+  onValue(dbRef, (snap) => {
+    const data = snap.val() || {};
+    estados  = data.estados  || {};
+    notas    = data.notas    || [];
+    ctxTexto = data.ctx      || "";
+    const ctxEl = document.getElementById("ctx");
+    if (document.activeElement !== ctxEl) ctxEl.value = ctxTexto;
+    renderizar();
+    renderHistorico();
+    setSync("ok", "sincronizado");
+    atualizarLastUpdate();
+    hideLoad();
+  }, (err) => {
+    setSync("err", "erro de conexão");
+    hideLoad();
+  });
+}
+
+/* ══════════════════════════════════════════
+   LOCAL STORAGE FALLBACK
+══════════════════════════════════════════ */
+function carregarLocal() {
+  try { estados  = JSON.parse(localStorage.getItem("pettlys_est") || "{}"); } catch(e){}
+  try { notas    = JSON.parse(localStorage.getItem("pettlys_not") || "[]"); } catch(e){}
+  try { ctxTexto = localStorage.getItem("pettlys_ctx") || ""; } catch(e){}
+  document.getElementById("ctx").value = ctxTexto;
+  renderizar();
+  renderHistorico();
+  setSync("ok", "local");
+  atualizarLastUpdate();
+}
+
+function salvarLocal() {
+  localStorage.setItem("pettlys_est", JSON.stringify(estados));
+  localStorage.setItem("pettlys_not", JSON.stringify(notas));
+  localStorage.setItem("pettlys_ctx", ctxTexto);
+}
+
+/* ══════════════════════════════════════════
+   SALVAR NO FIREBASE OU LOCAL
+══════════════════════════════════════════ */
+async function salvarTudo() {
+  setSync("syncing", "salvando...");
+  if (useLocal || !db) {
+    salvarLocal();
+    setSync("ok", "salvo");
+    return;
+  }
+  try {
+    await set(dbRef, { estados, notas, ctx: ctxTexto });
+    setSync("ok", "salvo");
+    atualizarLastUpdate();
+  } catch(e) {
+    setSync("err", "erro ao salvar");
+  }
+}
+
+/* ══════════════════════════════════════════
+   RENDER
+══════════════════════════════════════════ */
+function totalGeral() {
+  let feitas = 0, total = 0;
+  SEMANAS.forEach((sem, si) => {
+    sem.tarefas.forEach((_, ti) => {
+      total++;
+      if (estados[`${sem.id}_${ti}`]) feitas++;
+    });
+  });
+  return { feitas, total, restantes: total - feitas };
+}
+
+function renderOverview() {
+  const { feitas, total, restantes } = totalGeral();
+  const pct = total ? Math.round(feitas/total*100) : 0;
+  document.getElementById("overview").innerHTML = `
+    <div class="ov-card">
+      <div class="ov-num green">${feitas}</div>
+      <div class="ov-label">concluídas</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-num amber">${restantes}</div>
+      <div class="ov-label">pendentes</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-num coral">${pct}%</div>
+      <div class="ov-label">progresso</div>
+    </div>`;
+}
+
+function renderizar() {
+  renderOverview();
+  const cont = document.getElementById("semanas");
+  cont.innerHTML = "";
+
+  SEMANAS.forEach((sem, si) => {
+    const total = sem.tarefas.length;
+    const feitas = sem.tarefas.filter((_, ti) => estados[`${sem.id}_${ti}`]).length;
+    const pct = Math.round(feitas / total * 100);
+    const ab = abertos[sem.id];
+    const iconClass = sem.badge === "ativa" ? "green" : sem.badge === "prox" ? "amber" : "muted";
+    const badgeClass = sem.badge === "ativa" ? "badge-ativa" : sem.badge === "prox" ? "badge-prox" : "badge-fut";
+    const badgeTxt  = sem.badge === "ativa" ? "em andamento" : sem.badge === "prox" ? "próxima" : "futura";
+
+    const div = document.createElement("div");
+    div.className = "semana" + (sem.badge === "ativa" ? " ativa" : "");
+    div.innerHTML = `
+      <div class="sem-header" onclick="toggleSem('${sem.id}')">
+        <div class="sem-esq">
+          <div class="sem-icon ${iconClass}">${sem.icon}</div>
+          <span class="sem-titulo">${sem.label}</span>
+        </div>
+        <div class="sem-dir">
+          <span class="badge ${badgeClass}">${badgeTxt}</span>
+          <span class="chev ${ab ? "open" : ""}">▼</span>
+        </div>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
+        <span class="prog-txt">${feitas}/${total}</span>
+      </div>
+      <div class="tarefas-wrap ${ab ? "open" : ""}" id="tw_${sem.id}">
+        <div class="tarefas-inner">
+          <div class="sep"></div>
+          ${sem.tarefas.map((tar, ti) => {
+            const done = !!estados[`${sem.id}_${ti}`];
+            return `<div class="tarefa" onclick="toggleT('${sem.id}',${ti})">
+              <div class="ck ${done ? "done" : ""}">${done ? "✓" : ""}</div>
+              <div>
+                <div class="t-titulo ${done ? "done" : ""}">${tar.t}</div>
+                <div class="t-desc">${tar.d}</div>
+              </div>
+            </div>`;
+          }).join("")}
+        </div>
+      </div>`;
+    cont.appendChild(div);
+  });
+}
+
+/* ══════════════════════════════════════════
+   HISTÓRICO
+══════════════════════════════════════════ */
+function renderHistorico() {
+  const h = document.getElementById("historico");
+  if (!notas.length) { h.innerHTML = ""; return; }
+  h.innerHTML = notas.slice(0, 8).map(n => `
+    <div class="hist-item">
+      <div class="hist-meta">${n.data}</div>
+      <div class="hist-texto">${n.texto}</div>
+    </div>`).join("");
+}
+
+/* ══════════════════════════════════════════
+   INTERAÇÕES
+══════════════════════════════════════════ */
+window.toggleSem = function(id) {
+  abertos[id] = !abertos[id];
+  const wrap = document.getElementById("tw_" + id);
+  const chev = wrap?.previousElementSibling?.previousElementSibling?.querySelector(".chev");
+  if (wrap) wrap.classList.toggle("open", abertos[id]);
+  if (chev) chev.classList.toggle("open", abertos[id]);
+};
+
+window.toggleT = function(semId, ti) {
+  const k = `${semId}_${ti}`;
+  estados[k] = !estados[k];
+  renderizar();
+  salvarTudo();
+};
+
+window.registrarNota = function() {
+  const txt = document.getElementById("ctx").value.trim();
+  if (!txt) { toast("escreva algo antes de salvar"); return; }
+  const agora = new Date();
+  const data = agora.toLocaleDateString("pt-BR") + " " + agora.toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" });
+  notas.unshift({ data, texto: txt.slice(0, 400) });
+  if (notas.length > 10) notas = notas.slice(0, 10);
+  salvarTudo();
+  renderHistorico();
+  toast("nota registrada no histórico");
+};
+
+window.gerarContexto = function() {
+  const linhas = SEMANAS.map(sem => {
+    const total = sem.tarefas.length;
+    const feitas = sem.tarefas.filter((_, ti) => estados[`${sem.id}_${ti}`]).length;
+    const pend = sem.tarefas.filter((_, ti) => !estados[`${sem.id}_${ti}`]).map(t => t.t).join(", ");
+    return `${sem.label}: ${feitas}/${total} concluídas.\nPendente: ${pend || "nenhuma"}.`;
+  }).join("\n\n");
+
+  const ctx = document.getElementById("ctx").value || "(sem notas)";
+  const hist = notas.length
+    ? "\n\nHistórico recente:\n" + notas.slice(0, 3).map(n => `[${n.data}] ${n.texto}`).join("\n")
+    : "";
+
+  const resumo = `=== CONTEXTO PETTLYS ===
+
+Progresso atual:
+${linhas}
+
+Diário de bordo:
+${ctx}${hist}
+
+---
+Projeto: Pettlys — dropshipping pets UK
+Nicho: camas para cães e gatos + complementos
+Fornecedor: AliExpress Choice via DSers
+Canais: TikTok orgânico (fase atual) → Meta Ads (futuro)
+Equipe: 2 pessoas | Checkout: Stripe + Shopify
+Mercado-alvo: Reino Unido`;
+
+  const out = document.getElementById("ctx-output");
+  out.textContent = resumo;
+  out.classList.add("show");
+
+  navigator.clipboard.writeText(resumo).then(() => {
+    toast("contexto copiado para a área de transferência");
+  }).catch(() => {
+    toast("selecione e copie o texto acima");
+  });
+};
+
+function atualizarLastUpdate() {
+  const agora = new Date();
+  const txt = "última sync: " + agora.toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" });
+  document.getElementById("last-update").textContent = txt;
+}
+
+/* ══════════════════════════════════════════
+   INPUT DIÁRIO — AUTOSAVE
+══════════════════════════════════════════ */
+document.getElementById("ctx").addEventListener("input", (e) => {
+  ctxTexto = e.target.value;
+  clearTimeout(ctxTimer);
+  ctxTimer = setTimeout(() => salvarTudo(), 1500);
+});
+
+/* ══════════════════════════════════════════
+   INICIALIZAÇÃO
+══════════════════════════════════════════ */
+setLoad(20, "iniciando...");
+
+const cfgSalva = localStorage.getItem("pettlys_firebase_cfg");
+const modoLocal = localStorage.getItem("pettlys_use_local");
+
+if (modoLocal) {
+  setLoad(60, "carregando dados locais...");
+  useLocal = true;
+  setTimeout(() => {
+    carregarLocal();
+    hideLoad();
+  }, 600);
+} else if (cfgSalva) {
+  setLoad(50, "conectando ao Firebase...");
+  try {
+    const cfg = JSON.parse(cfgSalva);
+    iniciarFirebase(cfg);
+  } catch(e) {
+    document.getElementById("config-box").style.display = "block";
+    hideLoad();
+  }
+} else {
+  setLoad(80, "aguardando configuração...");
+  setTimeout(() => {
+    document.getElementById("config-box").style.display = "block";
+    hideLoad();
+  }, 800);
+}
+
+renderizar();
+
+</script>
+</body>
+</html>
